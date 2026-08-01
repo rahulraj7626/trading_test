@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../../core/config/app_config.dart';
+import '../../../../core/config/theme/app_colors.dart';
+import '../../../../core/config/theme/app_spacing.dart';
+import '../../../../core/config/theme/app_text_styles.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/presentation/widgets/common_stock_list_view.dart';
@@ -34,8 +38,9 @@ class WatchlistScreen extends StatelessWidget {
                   child: DropdownButton<int>(
                     value: state.selectedIndex,
                     icon: const Icon(
-                      Icons.arrow_drop_down,
-                      color: Colors.white,
+                      Icons.keyboard_arrow_down_rounded,
+                      color: AppColors.primary,
+                      size: 22,
                     ),
                     dropdownColor: Theme.of(context).scaffoldBackgroundColor,
                     onChanged: (int? newValue) {
@@ -50,9 +55,9 @@ class WatchlistScreen extends StatelessWidget {
                         value: entry.key,
                         child: Text(
                           entry.value.name,
-                          style: const TextStyle(
+                          style: AppTextStyles.titleMedium.copyWith(
                             color: Colors.white,
-                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       );
@@ -64,23 +69,55 @@ class WatchlistScreen extends StatelessWidget {
             },
           ),
           actions: [
-            IconButton(
-              icon: const Icon(Icons.add),
-              onPressed: () => _showAddWatchlistDialog(context),
+            // Create Watchlist Action Button
+            Container(
+              margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: IconButton(
+                icon: const Icon(
+                  Icons.playlist_add_rounded,
+                  color: AppColors.primary,
+                  size: 22,
+                ),
+                tooltip: 'New Watchlist',
+                onPressed: () => _showAddWatchlistDialog(context),
+              ),
             ),
+
+            // Delete Watchlist Action Button
             BlocBuilder<WatchlistCubit, WatchlistState>(
               builder: (context, state) {
                 if (state is WatchlistLoaded && state.watchlists.isNotEmpty) {
-                  return IconButton(
-                    icon: const Icon(Icons.delete),
-                    onPressed: () {
-                      final selected = state.selectedWatchlist;
-                      if (selected != null) {
-                        context.read<WatchlistCubit>().deleteWatchlist(
-                          selected.id,
-                        );
-                      }
-                    },
+                  return Container(
+                    margin: const EdgeInsets.only(
+                      top: 8,
+                      bottom: 8,
+                      right: 12,
+                      left: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.error.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: IconButton(
+                      icon: const Icon(
+                        Icons.delete_outline_rounded,
+                        color: AppColors.error,
+                        size: 20,
+                      ),
+                      tooltip: 'Delete Watchlist',
+                      onPressed: () {
+                        final selected = state.selectedWatchlist;
+                        if (selected != null) {
+                          context.read<WatchlistCubit>().deleteWatchlist(
+                            selected.id,
+                          );
+                        }
+                      },
+                    ),
                   );
                 }
                 return const SizedBox.shrink();
@@ -166,10 +203,13 @@ class WatchlistScreen extends StatelessWidget {
                         key: ValueKey('dismiss_$symbol'),
                         direction: DismissDirection.endToStart,
                         background: Container(
-                          color: Colors.red,
+                          color: AppColors.error,
                           alignment: Alignment.centerRight,
                           padding: const EdgeInsets.only(right: 16),
-                          child: const Icon(Icons.delete, color: Colors.white),
+                          child: const Icon(
+                            Icons.delete_outline_rounded,
+                            color: Colors.white,
+                          ),
                         ),
                         onDismissed: (_) {
                           context
@@ -204,14 +244,15 @@ class WatchlistScreen extends StatelessWidget {
         floatingActionButton: BlocBuilder<WatchlistCubit, WatchlistState>(
           builder: (context, state) {
             if (state is WatchlistLoaded && state.watchlists.isNotEmpty) {
-              return FloatingActionButton(
+              return FloatingActionButton.extended(
+                elevation: 3,
+                backgroundColor: AppColors.primary,
                 onPressed: () async {
                   final selected = state.selectedWatchlist;
                   if (selected != null) {
-                    final symbol = await showDialog<String>(
-                      context: context,
-                      builder: (context) =>
-                          StockPickerDialog(currentSymbols: selected.symbols),
+                    final symbol = await StockPickerDialog.show(
+                      context,
+                      currentSymbols: selected.symbols,
                     );
                     if (symbol != null && context.mounted) {
                       context.read<WatchlistCubit>().addStockToWatchlist(
@@ -221,7 +262,14 @@ class WatchlistScreen extends StatelessWidget {
                     }
                   }
                 },
-                child: const Icon(Icons.add),
+                icon: const Icon(Icons.add_rounded, color: Colors.white),
+                label: const Text(
+                  AppStrings.dialogAddStock,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               );
             }
             return const SizedBox.shrink();
@@ -233,34 +281,93 @@ class WatchlistScreen extends StatelessWidget {
 
   void _showAddWatchlistDialog(BuildContext context) {
     final controller = TextEditingController();
-    showDialog(
+    showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (context) {
-        return AlertDialog(
-          title: const Text(AppStrings.dialogNewWatchlist),
-          content: TextField(
-            controller: controller,
-            decoration: const InputDecoration(
-              hintText: AppStrings.titleWatchlist,
-            ),
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+            left: AppSpacing.md,
+            right: AppSpacing.md,
+            top: AppSpacing.md,
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text(AppStrings.dialogCancel),
-            ),
-            TextButton(
-              onPressed: () {
-                if (controller.text.trim().isNotEmpty) {
-                  context.read<WatchlistCubit>().addWatchlist(
-                    controller.text.trim(),
-                  );
-                  Navigator.pop(context);
-                }
-              },
-              child: const Text(AppStrings.dialogAdd),
-            ),
-          ],
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Container(
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.textSecondary.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              const Text(
+                AppStrings.dialogNewWatchlist,
+                style: AppTextStyles.titleLarge,
+              ),
+              const SizedBox(height: AppSpacing.md),
+              TextField(
+                controller: controller,
+                autofocus: true,
+                decoration: InputDecoration(
+                  labelText: AppStrings.titleWatchlist,
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: AppColors.primary),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: AppColors.divider),
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text(AppStrings.dialogCancel),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    onPressed: () {
+                      if (controller.text.trim().isNotEmpty) {
+                        context.read<WatchlistCubit>().addWatchlist(
+                          controller.text.trim(),
+                        );
+                        Navigator.pop(context);
+                      }
+                    },
+                    child: const Text(
+                      AppStrings.dialogAdd,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.md),
+            ],
+          ),
         );
       },
     );

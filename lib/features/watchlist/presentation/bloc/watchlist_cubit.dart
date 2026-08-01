@@ -117,4 +117,18 @@ class WatchlistCubit extends Cubit<WatchlistState> {
       }
     }
   }
+
+  void toggleFavorite(String symbol) {
+    if (state is WatchlistLoaded) {
+      final current = state as WatchlistLoaded;
+      final selected = current.selectedWatchlist;
+      if (selected != null) {
+        if (selected.symbols.contains(symbol)) {
+          removeStockFromWatchlist(selected.id, symbol);
+        } else {
+          addStockToWatchlist(selected.id, symbol);
+        }
+      }
+    }
+  }
 }

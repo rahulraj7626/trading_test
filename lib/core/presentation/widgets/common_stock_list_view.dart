@@ -48,10 +48,10 @@ class CommonStockListView<T> extends StatelessWidget {
             onCol3Tap: onCol3Tap,
           ),
         ),
-
         Expanded(
           child: onReorder != null
               ? ReorderableListView.builder(
+                  physics: const AlwaysScrollableScrollPhysics(),
                   itemCount: items.length,
                   onReorder: onReorder!,
                   itemBuilder: (context, index) {
@@ -64,8 +64,8 @@ class CommonStockListView<T> extends StatelessWidget {
                   },
                 )
               : ListView.builder(
+                  physics: const AlwaysScrollableScrollPhysics(),
                   itemCount: items.length,
-
                   itemBuilder: (context, index) {
                     final item = items[index];
                     return itemBuilder(context, item, index);

@@ -16,5 +16,8 @@ class AppColors {
   static const Color profit = Color(0xFF00C853);
   static const Color loss = Color(0xFFD50000);
 
+  static const Color buy = Color(0xFF00C853);
+  static const Color sell = Color(0xFF1E88E5);
+
   static const Color divider = Color(0x1FFFFFFF);
 }

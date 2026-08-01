@@ -39,6 +39,10 @@ class _BuySellTicketScreenState extends State<BuySellTicketScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final activeColor = _selectedSide == OrderSide.buy
+        ? AppColors.buy
+        : AppColors.sell;
+
     return MultiBlocProvider(
       providers: [
         BlocProvider(
@@ -73,56 +77,95 @@ class _BuySellTicketScreenState extends State<BuySellTicketScreen> {
           appBar: AppBar(
             title: Text('${AppStrings.tradePrefix} ${widget.symbol}'),
           ),
-          body: Padding(
+          body: SingleChildScrollView(
             padding: const EdgeInsets.all(AppSpacing.md),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Live Price Section
+                // Live Price Card
                 Container(
                   decoration: BoxDecoration(
                     color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: AppColors.divider),
                   ),
-                  child: StockRow(symbol: widget.symbol, showVolume: false),
+                  child: StockRow(
+                    symbol: widget.symbol,
+                    showVolume: false,
+                    showFavoriteStar: false,
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.lg),
 
-                // Side Selector
-                SegmentedButton<OrderSide>(
-                  style: ButtonStyle(
-                    backgroundColor: WidgetStateProperty.resolveWith((states) {
-                      if (states.contains(WidgetState.selected)) {
-                        return _selectedSide == OrderSide.buy
-                            ? AppColors.profit
-                            : AppColors.loss;
-                      }
-                      return null;
-                    }),
-                    foregroundColor: WidgetStateProperty.resolveWith((states) {
-                      if (states.contains(WidgetState.selected)) {
-                        return Colors.white;
-                      }
-                      return null;
-                    }),
+                // Custom Buy / Sell Selector (Consistent Colors)
+                Container(
+                  height: 48,
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.divider),
                   ),
-                  segments: const [
-                    ButtonSegment(
-                      value: OrderSide.buy,
-                      label: Text(AppStrings.buttonBuy),
-                    ),
-                    ButtonSegment(
-                      value: OrderSide.sell,
-                      label: Text(AppStrings.buttonSell),
-                    ),
-                  ],
-                  selected: {_selectedSide},
-                  onSelectionChanged: (Set<OrderSide> newSelection) {
-                    setState(() {
-                      _selectedSide = newSelection.first;
-                    });
-                  },
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _selectedSide = OrderSide.buy;
+                            });
+                          },
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            decoration: BoxDecoration(
+                              color: _selectedSide == OrderSide.buy
+                                  ? AppColors.buy
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              AppStrings.buttonBuy,
+                              style: AppTextStyles.titleMedium.copyWith(
+                                color: _selectedSide == OrderSide.buy
+                                    ? Colors.white
+                                    : AppColors.textSecondary,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _selectedSide = OrderSide.sell;
+                            });
+                          },
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            decoration: BoxDecoration(
+                              color: _selectedSide == OrderSide.sell
+                                  ? AppColors.sell
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              AppStrings.buttonSell,
+                              style: AppTextStyles.titleMedium.copyWith(
+                                color: _selectedSide == OrderSide.sell
+                                    ? Colors.white
+                                    : AppColors.textSecondary,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.lg),
 
@@ -131,15 +174,22 @@ class _BuySellTicketScreenState extends State<BuySellTicketScreen> {
                   controller: _quantityController,
                   keyboardType: TextInputType.number,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: AppStrings.inputQuantity,
-                    border: OutlineInputBorder(),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(color: AppColors.primary),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(color: AppColors.divider),
+                    ),
                   ),
                   onChanged: (_) => setState(() {}),
                 ),
                 const SizedBox(height: AppSpacing.lg),
 
-                // Order Value Preview
+                // Order Value Preview Card
                 BlocBuilder<LivePriceCubit, LivePriceState>(
                   builder: (context, priceState) {
                     final qtyStr = _quantityController.text;
@@ -150,18 +200,26 @@ class _BuySellTicketScreenState extends State<BuySellTicketScreen> {
                     }
                     final orderValue = qty * price;
 
-                    return Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          AppStrings.orderValue,
-                          style: AppTextStyles.titleMedium,
-                        ),
-                        Text(
-                          Formatters.formatPrice(orderValue),
-                          style: AppTextStyles.titleMedium,
-                        ),
-                      ],
+                    return Container(
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: AppColors.divider),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            AppStrings.orderValue,
+                            style: AppTextStyles.titleMedium,
+                          ),
+                          Text(
+                            Formatters.formatPrice(orderValue),
+                            style: AppTextStyles.titleMedium,
+                          ),
+                        ],
+                      ),
                     );
                   },
                 ),
@@ -200,12 +258,14 @@ class _BuySellTicketScreenState extends State<BuySellTicketScreen> {
                               }
                             }
                             final maxSell = currentHoldingQty;
+                            final holdingCurrentValue =
+                                currentHoldingQty * currentPrice;
 
                             return Container(
                               padding: const EdgeInsets.all(AppSpacing.md),
                               decoration: BoxDecoration(
                                 color: AppColors.surface,
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: BorderRadius.circular(12),
                                 border: Border.all(color: AppColors.divider),
                               ),
                               child: Column(
@@ -214,13 +274,16 @@ class _BuySellTicketScreenState extends State<BuySellTicketScreen> {
                                     mainAxisAlignment:
                                         MainAxisAlignment.spaceBetween,
                                     children: [
-                                      Text(
+                                      const Text(
                                         AppStrings.availableBalance,
                                         style: AppTextStyles.labelMedium,
                                       ),
                                       Text(
                                         Formatters.formatPrice(balance),
-                                        style: AppTextStyles.bodyMedium,
+                                        style: AppTextStyles.bodyMedium
+                                            .copyWith(
+                                              fontWeight: FontWeight.bold,
+                                            ),
                                       ),
                                     ],
                                   ),
@@ -229,31 +292,37 @@ class _BuySellTicketScreenState extends State<BuySellTicketScreen> {
                                     mainAxisAlignment:
                                         MainAxisAlignment.spaceBetween,
                                     children: [
-                                      Text(
+                                      const Text(
                                         AppStrings.maxBuyQty,
                                         style: AppTextStyles.labelMedium,
                                       ),
                                       Text(
                                         '$maxBuy',
-                                        style: AppTextStyles.bodyMedium,
+                                        style: AppTextStyles.bodyMedium
+                                            .copyWith(
+                                              fontWeight: FontWeight.bold,
+                                            ),
                                       ),
                                     ],
                                   ),
                                   const Divider(
-                                    height: 16,
+                                    height: 20,
                                     color: AppColors.divider,
                                   ),
                                   Row(
                                     mainAxisAlignment:
                                         MainAxisAlignment.spaceBetween,
                                     children: [
-                                      Text(
+                                      const Text(
                                         AppStrings.currentHolding,
                                         style: AppTextStyles.labelMedium,
                                       ),
                                       Text(
                                         '$currentHoldingQty ${AppStrings.qtySuffix}',
-                                        style: AppTextStyles.bodyMedium,
+                                        style: AppTextStyles.bodyMedium
+                                            .copyWith(
+                                              fontWeight: FontWeight.bold,
+                                            ),
                                       ),
                                     ],
                                   ),
@@ -262,13 +331,36 @@ class _BuySellTicketScreenState extends State<BuySellTicketScreen> {
                                     mainAxisAlignment:
                                         MainAxisAlignment.spaceBetween,
                                     children: [
+                                      const Text(
+                                        AppStrings.portfolioCurrentValue,
+                                        style: AppTextStyles.labelMedium,
+                                      ),
                                       Text(
+                                        Formatters.formatPrice(
+                                          holdingCurrentValue,
+                                        ),
+                                        style: AppTextStyles.bodyMedium
+                                            .copyWith(
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      const Text(
                                         AppStrings.maxSellQty,
                                         style: AppTextStyles.labelMedium,
                                       ),
                                       Text(
                                         '$maxSell',
-                                        style: AppTextStyles.bodyMedium,
+                                        style: AppTextStyles.bodyMedium
+                                            .copyWith(
+                                              fontWeight: FontWeight.bold,
+                                            ),
                                       ),
                                     ],
                                   ),
@@ -281,59 +373,140 @@ class _BuySellTicketScreenState extends State<BuySellTicketScreen> {
                     );
                   },
                 ),
-                const Spacer(),
+                const SizedBox(height: AppSpacing.xl),
 
-                // Submit Button
+                // Submit Button (Validation & Enable/Disable)
                 BlocBuilder<TradingCubit, TradingState>(
                   builder: (context, tradingState) {
                     return BlocBuilder<LivePriceCubit, LivePriceState>(
                       builder: (context, priceState) {
-                        final isLoading =
-                            tradingState is TradingOrderSubmitting ||
-                            priceState is! LivePriceLoaded;
-                        return ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.all(AppSpacing.md),
-                            backgroundColor: _selectedSide == OrderSide.buy
-                                ? AppColors.profit
-                                : AppColors.loss,
-                          ),
-                          onPressed: isLoading
-                              ? null
-                              : () {
-                                  final qty =
-                                      int.tryParse(_quantityController.text) ??
-                                      0;
-                                  if (qty <= 0) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                          AppStrings.errorInvalidQty,
-                                        ),
-                                      ),
-                                    );
-                                    return;
-                                  }
+                        return BlocBuilder<HoldingsCubit, HoldingsState>(
+                          builder: (context, holdingsState) {
+                            double balance = 0.0;
+                            if (tradingState is TradingLoaded) {
+                              balance = tradingState.wallet.balance;
+                            }
 
-                                  context.read<TradingCubit>().placeOrder(
-                                    symbol: widget.symbol,
-                                    side: _selectedSide,
-                                    quantity: qty,
-                                    price: priceState.tick.price,
-                                  );
-                                },
-                          child: isLoading
-                              ? const CircularProgressIndicator(
-                                  color: Colors.white,
-                                )
-                              : Text(
-                                  _selectedSide == OrderSide.buy
-                                      ? AppStrings.placeBuyOrder
-                                      : AppStrings.placeSellOrder,
-                                  style: AppTextStyles.titleMedium.copyWith(
-                                    color: Colors.white,
+                            double currentPrice = 0.0;
+                            if (priceState is LivePriceLoaded) {
+                              currentPrice = priceState.tick.price;
+                            }
+
+                            int maxBuy = 0;
+                            if (currentPrice > 0) {
+                              maxBuy = (balance / currentPrice).floor();
+                            }
+
+                            int currentHoldingQty = 0;
+                            if (holdingsState is HoldingsLoaded) {
+                              final holdingIdx = holdingsState.holdings
+                                  .indexWhere((h) => h.symbol == widget.symbol);
+                              if (holdingIdx != -1) {
+                                currentHoldingQty =
+                                    holdingsState.holdings[holdingIdx].quantity;
+                              }
+                            }
+                            final maxSell = currentHoldingQty;
+
+                            final qtyStr = _quantityController.text;
+                            final qty = int.tryParse(qtyStr) ?? 0;
+
+                            final isLoading =
+                                tradingState is TradingOrderSubmitting ||
+                                priceState is! LivePriceLoaded;
+
+                            bool isValid = !isLoading;
+                            String? validationError;
+
+                            if (_selectedSide == OrderSide.sell) {
+                              if (maxSell == 0) {
+                                isValid = false;
+                                validationError =
+                                    'No holdings available to sell';
+                              } else if (qty <= 0) {
+                                isValid = false;
+                              } else if (qty > maxSell) {
+                                isValid = false;
+                                validationError =
+                                    'Quantity exceeds max sellable quantity ($maxSell)';
+                              }
+                            } else {
+                              if (maxBuy == 0) {
+                                isValid = false;
+                                validationError = 'Insufficient balance to buy';
+                              } else if (qty <= 0) {
+                                isValid = false;
+                              } else if (qty > maxBuy) {
+                                isValid = false;
+                                validationError =
+                                    'Quantity exceeds max buyable quantity ($maxBuy)';
+                              }
+                            }
+
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                if (validationError != null) ...[
+                                  Padding(
+                                    padding: const EdgeInsets.only(bottom: 8.0),
+                                    child: Text(
+                                      validationError,
+                                      textAlign: TextAlign.center,
+                                      style: AppTextStyles.labelMedium.copyWith(
+                                        color: AppColors.error,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                                SizedBox(
+                                  height: 52,
+                                  child: ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: activeColor,
+                                      disabledBackgroundColor:
+                                          AppColors.divider,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      elevation: isValid ? 2 : 0,
+                                    ),
+                                    onPressed: isValid
+                                        ? () {
+                                            context
+                                                .read<TradingCubit>()
+                                                .placeOrder(
+                                                  symbol: widget.symbol,
+                                                  side: _selectedSide,
+                                                  quantity: qty,
+                                                  price:
+                                                      (priceState
+                                                              as LivePriceLoaded)
+                                                          .tick
+                                                          .price,
+                                                );
+                                          }
+                                        : null,
+                                    child: isLoading
+                                        ? const CircularProgressIndicator(
+                                            color: Colors.white,
+                                          )
+                                        : Text(
+                                            _selectedSide == OrderSide.buy
+                                                ? AppStrings.placeBuyOrder
+                                                : AppStrings.placeSellOrder,
+                                            style: AppTextStyles.titleMedium
+                                                .copyWith(
+                                                  color: isValid
+                                                      ? Colors.white
+                                                      : AppColors.textSecondary,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                          ),
                                   ),
                                 ),
+                              ],
+                            );
+                          },
                         );
                       },
                     );

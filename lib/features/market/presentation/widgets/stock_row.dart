@@ -9,16 +9,21 @@ import '../../../../core/utils/formatters.dart';
 import '../bloc/live_price_cubit.dart';
 import '../bloc/live_price_state.dart';
 
+import '../../../watchlist/presentation/bloc/watchlist_cubit.dart';
+import '../../../watchlist/presentation/bloc/watchlist_state.dart';
+
 class StockRow extends StatelessWidget {
   final String symbol;
   final VoidCallback? onTap;
   final bool showVolume;
+  final bool showFavoriteStar;
 
   const StockRow({
     super.key,
     required this.symbol,
     this.onTap,
     this.showVolume = true,
+    this.showFavoriteStar = true,
   });
 
   @override
@@ -111,6 +116,39 @@ class StockRow extends StatelessWidget {
                       ],
                     ),
                   ),
+                  if (showFavoriteStar)
+                    BlocBuilder<WatchlistCubit, WatchlistState>(
+                      builder: (context, watchlistState) {
+                        bool isFavorite = false;
+                        if (watchlistState is WatchlistLoaded &&
+                            watchlistState.selectedWatchlist != null) {
+                          isFavorite = watchlistState.selectedWatchlist!.symbols
+                              .contains(tick.symbol);
+                        }
+                        return InkWell(
+                          borderRadius: BorderRadius.circular(20),
+                          onTap: () {
+                            context.read<WatchlistCubit>().toggleFavorite(
+                              tick.symbol,
+                            );
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.only(left: 8.0),
+                            child: Icon(
+                              isFavorite
+                                  ? Icons.star_rounded
+                                  : Icons.star_border_rounded,
+                              color: isFavorite
+                                  ? const Color(0xFFFFC107)
+                                  : AppColors.textSecondary.withValues(
+                                      alpha: 0.35,
+                                    ),
+                              size: 20,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                 ],
               ),
             ),
