@@ -22,7 +22,18 @@ class HoldingsCubit extends Cubit<HoldingsState> {
 
   void updateSortOption(HoldingsSortOption option) {
     if (state is HoldingsLoaded) {
-      emit((state as HoldingsLoaded).copyWith(sortOption: option));
+      final currentState = state as HoldingsLoaded;
+      if (currentState.sortOption == option) {
+        emit(currentState.copyWith(isAscending: !currentState.isAscending));
+      } else {
+        final defaultAscending = option == HoldingsSortOption.symbol;
+        emit(
+          currentState.copyWith(
+            sortOption: option,
+            isAscending: defaultAscending,
+          ),
+        );
+      }
     }
   }
 }

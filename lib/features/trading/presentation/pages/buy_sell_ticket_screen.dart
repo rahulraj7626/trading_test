@@ -11,6 +11,7 @@ import '../../../../core/utils/formatters.dart';
 import '../../../market/domain/repositories/market_repository.dart';
 import '../../../market/presentation/bloc/live_price_cubit.dart';
 import '../../../market/presentation/bloc/live_price_state.dart';
+import '../../../market/presentation/widgets/stock_row.dart';
 import '../../../portfolio/presentation/bloc/holdings_cubit.dart';
 import '../../../portfolio/presentation/bloc/holdings_state.dart';
 import '../../domain/entities/order_entity.dart';
@@ -77,35 +78,35 @@ class _BuySellTicketScreenState extends State<BuySellTicketScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Live Price Header
-                BlocBuilder<LivePriceCubit, LivePriceState>(
-                  builder: (context, state) {
-                    if (state is LivePriceLoaded) {
-                      return Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            AppStrings.currentPrice,
-                            style: AppTextStyles.titleMedium,
-                          ),
-                          Text(
-                            Formatters.formatPrice(state.tick.price),
-                            style: AppTextStyles.displayMedium.copyWith(
-                              color: state.isUpTick
-                                  ? AppColors.profit
-                                  : AppColors.loss,
-                            ),
-                          ),
-                        ],
-                      );
-                    }
-                    return const Center(child: CircularProgressIndicator());
-                  },
+                // Live Price Section
+                Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppColors.divider),
+                  ),
+                  child: StockRow(symbol: widget.symbol, showVolume: false),
                 ),
                 const SizedBox(height: AppSpacing.lg),
 
                 // Side Selector
                 SegmentedButton<OrderSide>(
+                  style: ButtonStyle(
+                    backgroundColor: WidgetStateProperty.resolveWith((states) {
+                      if (states.contains(WidgetState.selected)) {
+                        return _selectedSide == OrderSide.buy
+                            ? AppColors.profit
+                            : AppColors.loss;
+                      }
+                      return null;
+                    }),
+                    foregroundColor: WidgetStateProperty.resolveWith((states) {
+                      if (states.contains(WidgetState.selected)) {
+                        return Colors.white;
+                      }
+                      return null;
+                    }),
+                  ),
                   segments: const [
                     ButtonSegment(
                       value: OrderSide.buy,

@@ -12,8 +12,14 @@ import '../bloc/live_price_state.dart';
 class StockRow extends StatelessWidget {
   final String symbol;
   final VoidCallback? onTap;
+  final bool showVolume;
 
-  const StockRow({super.key, required this.symbol, this.onTap});
+  const StockRow({
+    super.key,
+    required this.symbol,
+    this.onTap,
+    this.showVolume = true,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -68,14 +74,15 @@ class StockRow extends StatelessWidget {
                       ],
                     ),
                   ),
-                  Expanded(
-                    flex: 2,
-                    child: Text(
-                      volume.toStringAsFixed(2),
-                      style: AppTextStyles.bodyLarge,
-                      textAlign: TextAlign.right,
+                  if (showVolume)
+                    Expanded(
+                      flex: 2,
+                      child: Text(
+                        volume.toStringAsFixed(2),
+                        style: AppTextStyles.bodyLarge,
+                        textAlign: TextAlign.right,
+                      ),
                     ),
-                  ),
                   Expanded(
                     flex: 3,
                     child: Column(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/config/app_config.dart';
+import '../../../../core/constants/app_strings.dart';
 
 class StockPickerDialog extends StatelessWidget {
   final List<String> currentSymbols;
@@ -13,11 +14,11 @@ class StockPickerDialog extends StatelessWidget {
         .toList();
 
     return AlertDialog(
-      title: const Text('Add Stock'),
+      title: const Text(AppStrings.dialogAddStock),
       content: SizedBox(
         width: double.maxFinite,
         child: available.isEmpty
-            ? const Text('All stocks are already in the watchlist.')
+            ? const Text(AppStrings.dialogAllStocksInWatchlist)
             : ListView.builder(
                 shrinkWrap: true,
                 itemCount: available.length,
@@ -35,7 +36,7 @@ class StockPickerDialog extends StatelessWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: const Text(AppStrings.dialogCancel),
         ),
       ],
     );

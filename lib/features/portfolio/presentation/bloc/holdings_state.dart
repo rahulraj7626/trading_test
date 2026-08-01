@@ -17,24 +17,28 @@ class HoldingsLoading extends HoldingsState {}
 class HoldingsLoaded extends HoldingsState {
   final List<Holding> holdings;
   final HoldingsSortOption sortOption;
+  final bool isAscending;
 
   const HoldingsLoaded({
     required this.holdings,
     this.sortOption = HoldingsSortOption.pnl,
+    this.isAscending = false,
   });
 
   HoldingsLoaded copyWith({
     List<Holding>? holdings,
     HoldingsSortOption? sortOption,
+    bool? isAscending,
   }) {
     return HoldingsLoaded(
       holdings: holdings ?? this.holdings,
       sortOption: sortOption ?? this.sortOption,
+      isAscending: isAscending ?? this.isAscending,
     );
   }
 
   @override
-  List<Object?> get props => [holdings, sortOption];
+  List<Object?> get props => [holdings, sortOption, isAscending];
 }
 
 class HoldingsError extends HoldingsState {

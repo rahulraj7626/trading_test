@@ -1,6 +1,8 @@
 import 'dart:async';
+
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../../market/domain/entities/stock_tick.dart';
 import '../../../market/domain/repositories/market_repository.dart';
 import '../../domain/entities/holding.dart';
@@ -51,7 +53,7 @@ class PortfolioSummaryCubit extends Cubit<PortfolioSummaryState> {
            currentValue: 0,
            totalPnL: 0,
            totalPnLPercent: 0,
-           ticks: const {},
+           ticks: {},
          ),
        ) {
     _init();
