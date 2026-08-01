@@ -7,6 +7,11 @@ class AppStrings {
   // Market & Watchlist Screens
   static const String titleLiveMarket = 'Live Market';
   static const String titleWatchlist = 'Watchlist';
+  static const String searchPlaceholder = 'Search stocks by name or symbol...';
+  static const String searchNoResults = 'No stocks found matching';
+  static const String addedToWatchlist = 'Added to watchlist:';
+  static const String removedFromWatchlist = 'Removed from watchlist:';
+  static const String titleAddToWatchlist = 'Add to Watchlist';
   static const String errorNoWatchlists =
       'No watchlists available. Create one!';
   static const String errorEmptyWatchlist =

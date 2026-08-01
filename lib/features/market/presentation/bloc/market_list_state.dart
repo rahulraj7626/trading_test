@@ -16,25 +16,29 @@ class MarketListLoaded extends MarketListState {
   final Map<String, StockTick> ticks;
   final MarketSortOption sortOption;
   final bool isAscending;
+  final String searchQuery;
 
   const MarketListLoaded({
     required this.ticks,
     this.sortOption = MarketSortOption.symbol,
     this.isAscending = true,
+    this.searchQuery = '',
   });
 
   MarketListLoaded copyWith({
     Map<String, StockTick>? ticks,
     MarketSortOption? sortOption,
     bool? isAscending,
+    String? searchQuery,
   }) {
     return MarketListLoaded(
       ticks: ticks ?? this.ticks,
       sortOption: sortOption ?? this.sortOption,
       isAscending: isAscending ?? this.isAscending,
+      searchQuery: searchQuery ?? this.searchQuery,
     );
   }
 
   @override
-  List<Object?> get props => [ticks, sortOption, isAscending];
+  List<Object?> get props => [ticks, sortOption, isAscending, searchQuery];
 }

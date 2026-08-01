@@ -4,13 +4,14 @@ import '../../../../core/config/app_config.dart';
 import '../../../../core/config/theme/app_colors.dart';
 import '../../../../core/config/theme/app_spacing.dart';
 import '../../../../core/config/theme/app_text_styles.dart';
+import '../../../../core/constants/app_strings.dart';
 import '../../../../core/presentation/widgets/company_avatar.dart';
 import '../../../../core/utils/formatters.dart';
-import '../bloc/live_price_cubit.dart';
-import '../bloc/live_price_state.dart';
-
 import '../../../watchlist/presentation/bloc/watchlist_cubit.dart';
 import '../../../watchlist/presentation/bloc/watchlist_state.dart';
+import '../../../watchlist/presentation/widgets/watchlist_selector_sheet.dart';
+import '../bloc/live_price_cubit.dart';
+import '../bloc/live_price_state.dart';
 
 class StockRow extends StatelessWidget {
   final String symbol;
@@ -120,17 +121,37 @@ class StockRow extends StatelessWidget {
                     BlocBuilder<WatchlistCubit, WatchlistState>(
                       builder: (context, watchlistState) {
                         bool isFavorite = false;
+                        String? watchlistName;
                         if (watchlistState is WatchlistLoaded &&
                             watchlistState.selectedWatchlist != null) {
+                          watchlistName =
+                              watchlistState.selectedWatchlist!.name;
                           isFavorite = watchlistState.selectedWatchlist!.symbols
                               .contains(tick.symbol);
                         }
                         return InkWell(
                           borderRadius: BorderRadius.circular(20),
                           onTap: () {
-                            context.read<WatchlistCubit>().toggleFavorite(
-                              tick.symbol,
-                            );
+                            if (watchlistState is WatchlistLoaded &&
+                                watchlistState.selectedWatchlist != null) {
+                              context.read<WatchlistCubit>().toggleFavorite(
+                                tick.symbol,
+                              );
+                              final text = isFavorite
+                                  ? '${AppStrings.removedFromWatchlist} $watchlistName'
+                                  : '${AppStrings.addedToWatchlist} $watchlistName';
+                              ScaffoldMessenger.of(context)
+                                ..hideCurrentSnackBar()
+                                ..showSnackBar(
+                                  SnackBar(
+                                    content: Text(text),
+                                    duration: const Duration(seconds: 2),
+                                  ),
+                                );
+                            }
+                          },
+                          onLongPress: () {
+                            WatchlistSelectorSheet.show(context, tick.symbol);
                           },
                           child: Padding(
                             padding: const EdgeInsets.only(left: 8.0),

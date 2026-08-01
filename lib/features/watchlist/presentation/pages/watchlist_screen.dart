@@ -19,8 +19,22 @@ import '../bloc/watchlist_cubit.dart';
 import '../bloc/watchlist_state.dart';
 import '../widgets/stock_picker_dialog.dart';
 
-class WatchlistScreen extends StatelessWidget {
+class WatchlistScreen extends StatefulWidget {
   const WatchlistScreen({super.key});
+
+  @override
+  State<WatchlistScreen> createState() => _WatchlistScreenState();
+}
+
+class _WatchlistScreenState extends State<WatchlistScreen> {
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -169,9 +183,18 @@ class WatchlistScreen extends StatelessWidget {
                 );
               }
 
+              final query = _searchQuery.trim().toLowerCase();
+              final filteredSymbols = selected.symbols.where((symbol) {
+                if (query.isEmpty) return true;
+                final name = (AppConfig.companyNames[symbol] ?? '')
+                    .toLowerCase();
+                return symbol.toLowerCase().contains(query) ||
+                    name.contains(query);
+              }).toList();
+
               return BlocBuilder<MarketListCubit, MarketListState>(
                 builder: (context, marketState) {
-                  final sortedSymbols = List.of(selected.symbols);
+                  final sortedSymbols = List.of(filteredSymbols);
 
                   if (marketState is MarketListLoaded) {
                     sortedSymbols.sort((a, b) {
@@ -201,63 +224,171 @@ class WatchlistScreen extends StatelessWidget {
                     });
                   }
 
-                  return CommonStockListView<String>(
-                    col1: AppStrings.colCompanyName,
-                    col2: AppStrings.colVolumeCr,
-                    col3: AppStrings.colLTP,
-                    onCol1Tap: () => context
-                        .read<MarketListCubit>()
-                        .updateSortOption(MarketSortOption.symbol),
-                    onCol2Tap: () => context
-                        .read<MarketListCubit>()
-                        .updateSortOption(MarketSortOption.volume),
-                    onCol3Tap: () => context
-                        .read<MarketListCubit>()
-                        .updateSortOption(MarketSortOption.percentage),
-                    items: sortedSymbols,
-                    onReorder: (oldIndex, newIndex) {
-                      context.read<WatchlistCubit>().reorderStocks(
-                        selected.id,
-                        oldIndex,
-                        newIndex,
-                      );
-                    },
-                    dismissibleBuilder: (context, symbol, index, child) {
-                      return Dismissible(
-                        key: ValueKey('dismiss_$symbol'),
-                        direction: DismissDirection.endToStart,
-                        background: Container(
-                          color: AppColors.error,
-                          alignment: Alignment.centerRight,
-                          padding: const EdgeInsets.only(right: 16),
-                          child: const Icon(
-                            Icons.delete_outline_rounded,
-                            color: Colors.white,
+                  return Column(
+                    children: [
+                      // Search Input
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                          AppSpacing.md,
+                          AppSpacing.sm,
+                          AppSpacing.md,
+                          AppSpacing.sm,
+                        ),
+                        child: TextField(
+                          controller: _searchController,
+                          onChanged: (val) {
+                            setState(() {
+                              _searchQuery = val;
+                            });
+                          },
+                          decoration: InputDecoration(
+                            hintText: AppStrings.searchPlaceholder,
+                            hintStyle: AppTextStyles.bodyMedium.copyWith(
+                              color: AppColors.textSecondary.withValues(
+                                alpha: 0.6,
+                              ),
+                            ),
+                            prefixIcon: const Icon(
+                              Icons.search_rounded,
+                              color: AppColors.textSecondary,
+                              size: 20,
+                            ),
+                            suffixIcon: _searchQuery.isNotEmpty
+                                ? IconButton(
+                                    icon: const Icon(
+                                      Icons.clear_rounded,
+                                      color: AppColors.textSecondary,
+                                      size: 18,
+                                    ),
+                                    onPressed: () {
+                                      _searchController.clear();
+                                      setState(() {
+                                        _searchQuery = '';
+                                      });
+                                    },
+                                  )
+                                : null,
+                            filled: true,
+                            fillColor: AppColors.surface,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.md,
+                              vertical: 10,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(
+                                color: AppColors.divider,
+                                width: 1,
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(
+                                color: AppColors.primary,
+                                width: 1.5,
+                              ),
+                            ),
                           ),
                         ),
-                        onDismissed: (_) {
-                          context
-                              .read<WatchlistCubit>()
-                              .removeStockFromWatchlist(selected.id, symbol);
-                        },
-                        child: child,
-                      );
-                    },
-                    itemBuilder: (context, symbol, index) {
-                      return BlocProvider(
-                        key: ValueKey('provider_$symbol'),
-                        create: (_) => LivePriceCubit(
-                          marketRepository: getIt<MarketRepository>(),
-                          symbol: symbol,
-                        ),
-                        child: StockRow(
-                          symbol: symbol,
-                          onTap: () {
-                            context.push('/trade/$symbol');
-                          },
-                        ),
-                      );
-                    },
+                      ),
+
+                      // Stock List or Empty Search Results
+                      Expanded(
+                        child: sortedSymbols.isEmpty
+                            ? Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.search_off_rounded,
+                                      size: 48,
+                                      color: AppColors.textSecondary.withValues(
+                                        alpha: 0.5,
+                                      ),
+                                    ),
+                                    const SizedBox(height: AppSpacing.md),
+                                    Text(
+                                      '${AppStrings.searchNoResults} "$_searchQuery"',
+                                      style: AppTextStyles.bodyMedium.copyWith(
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : CommonStockListView<String>(
+                                col1: AppStrings.colCompanyName,
+                                col2: AppStrings.colVolumeCr,
+                                col3: AppStrings.colLTP,
+                                onCol1Tap: () => context
+                                    .read<MarketListCubit>()
+                                    .updateSortOption(MarketSortOption.symbol),
+                                onCol2Tap: () => context
+                                    .read<MarketListCubit>()
+                                    .updateSortOption(MarketSortOption.volume),
+                                onCol3Tap: () => context
+                                    .read<MarketListCubit>()
+                                    .updateSortOption(
+                                      MarketSortOption.percentage,
+                                    ),
+                                items: sortedSymbols,
+                                onReorder: (oldIndex, newIndex) {
+                                  context.read<WatchlistCubit>().reorderStocks(
+                                    selected.id,
+                                    oldIndex,
+                                    newIndex,
+                                  );
+                                },
+                                dismissibleBuilder:
+                                    (context, symbol, index, child) {
+                                      return Dismissible(
+                                        key: ValueKey('dismiss_$symbol'),
+                                        direction: DismissDirection.endToStart,
+                                        background: Container(
+                                          color: AppColors.error,
+                                          alignment: Alignment.centerRight,
+                                          padding: const EdgeInsets.only(
+                                            right: 16,
+                                          ),
+                                          child: const Icon(
+                                            Icons.delete_outline_rounded,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                        onDismissed: (_) {
+                                          context
+                                              .read<WatchlistCubit>()
+                                              .removeStockFromWatchlist(
+                                                selected.id,
+                                                symbol,
+                                              );
+                                        },
+                                        child: child,
+                                      );
+                                    },
+                                itemBuilder: (context, symbol, index) {
+                                  return BlocProvider(
+                                    key: ValueKey('provider_$symbol'),
+                                    create: (_) => LivePriceCubit(
+                                      marketRepository:
+                                          getIt<MarketRepository>(),
+                                      symbol: symbol,
+                                    ),
+                                    child: StockRow(
+                                      symbol: symbol,
+                                      onTap: () {
+                                        context.push('/trade/$symbol');
+                                      },
+                                    ),
+                                  );
+                                },
+                              ),
+                      ),
+                    ],
                   );
                 },
               );
