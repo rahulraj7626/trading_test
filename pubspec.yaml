@@ -48,6 +48,7 @@ dependencies:
   sqlite3_flutter_libs: ^0.6.0+eol
   path_provider: ^2.1.6
   path: ^1.9.1
+  flutter_native_splash: ^2.4.6
 
 dev_dependencies:
   flutter_test:
@@ -63,6 +64,24 @@ dev_dependencies:
   freezed: ^3.2.5
   json_serializable: ^6.14.1
   drift_dev: ^2.34.0
+  flutter_launcher_icons: ^0.14.3
+
+flutter_launcher_icons:
+  android: "ic_launcher"
+  ios: true
+  image_path: "assets/images/app_icon.png"
+  min_sdk_android: 21
+  adaptive_icon_background: "#121212"
+  adaptive_icon_foreground: "assets/images/app_icon_raw.png"
+  remove_alpha_ios: true
+
+flutter_native_splash:
+  color: "#121212"
+  image: "assets/images/app_icon_raw.png"
+  android_12:
+    image: "assets/images/app_icon_raw.png"
+    color: "#121212"
+  web: false
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -74,6 +93,9 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  assets:
+    - assets/images/
 
   # To add assets to your application, add an assets section, like this:
   # assets:
