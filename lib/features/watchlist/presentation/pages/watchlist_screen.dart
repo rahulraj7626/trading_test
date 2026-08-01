@@ -14,6 +14,7 @@ import '../../../market/presentation/bloc/live_price_cubit.dart';
 import '../../../market/presentation/bloc/market_list_cubit.dart';
 import '../../../market/presentation/bloc/market_list_state.dart';
 import '../../../market/presentation/widgets/stock_row.dart';
+import '../../domain/entities/watchlist.dart';
 import '../bloc/watchlist_cubit.dart';
 import '../bloc/watchlist_state.dart';
 import '../widgets/stock_picker_dialog.dart';
@@ -70,27 +71,52 @@ class WatchlistScreen extends StatelessWidget {
           ),
           actions: [
             // Create Watchlist Action Button
-            Container(
-              margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: IconButton(
-                icon: const Icon(
-                  Icons.playlist_add_rounded,
-                  color: AppColors.primary,
-                  size: 22,
-                ),
-                tooltip: 'New Watchlist',
-                onPressed: () => _showAddWatchlistDialog(context),
-              ),
+            BlocBuilder<WatchlistCubit, WatchlistState>(
+              builder: (context, state) {
+                final isMaxReached =
+                    state is WatchlistLoaded && state.watchlists.length >= 10;
+                return Container(
+                  margin: const EdgeInsets.symmetric(
+                    vertical: 8,
+                    horizontal: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isMaxReached
+                        ? AppColors.textSecondary.withValues(alpha: 0.08)
+                        : AppColors.primary.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: IconButton(
+                    icon: Icon(
+                      Icons.playlist_add_rounded,
+                      color: isMaxReached
+                          ? AppColors.textSecondary.withValues(alpha: 0.5)
+                          : AppColors.primary,
+                      size: 22,
+                    ),
+                    tooltip: isMaxReached
+                        ? AppStrings.errorMaxWatchlistsReached
+                        : AppStrings.dialogNewWatchlist,
+                    onPressed: () {
+                      if (isMaxReached) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(AppStrings.errorMaxWatchlistsReached),
+                          ),
+                        );
+                      } else {
+                        _showAddWatchlistDialog(context);
+                      }
+                    },
+                  ),
+                );
+              },
             ),
 
             // Delete Watchlist Action Button
             BlocBuilder<WatchlistCubit, WatchlistState>(
               builder: (context, state) {
-                if (state is WatchlistLoaded && state.watchlists.isNotEmpty) {
+                if (state is WatchlistLoaded && state.watchlists.length > 1) {
                   return Container(
                     margin: const EdgeInsets.only(
                       top: 8,
@@ -108,13 +134,11 @@ class WatchlistScreen extends StatelessWidget {
                         color: AppColors.error,
                         size: 20,
                       ),
-                      tooltip: 'Delete Watchlist',
+                      tooltip: AppStrings.dialogDeleteWatchlist,
                       onPressed: () {
                         final selected = state.selectedWatchlist;
                         if (selected != null) {
-                          context.read<WatchlistCubit>().deleteWatchlist(
-                            selected.id,
-                          );
+                          _showDeleteWatchlistDialog(context, selected);
                         }
                       },
                     ),
@@ -244,9 +268,10 @@ class WatchlistScreen extends StatelessWidget {
         floatingActionButton: BlocBuilder<WatchlistCubit, WatchlistState>(
           builder: (context, state) {
             if (state is WatchlistLoaded && state.watchlists.isNotEmpty) {
-              return FloatingActionButton.extended(
+              return FloatingActionButton(
                 elevation: 3,
                 backgroundColor: AppColors.primary,
+                tooltip: AppStrings.dialogAddStock,
                 onPressed: () async {
                   final selected = state.selectedWatchlist;
                   if (selected != null) {
@@ -262,13 +287,10 @@ class WatchlistScreen extends StatelessWidget {
                     }
                   }
                 },
-                icon: const Icon(Icons.add_rounded, color: Colors.white),
-                label: const Text(
-                  AppStrings.dialogAddStock,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
+                child: const Icon(
+                  Icons.add_rounded,
+                  color: Colors.white,
+                  size: 28,
                 ),
               );
             }
@@ -368,6 +390,50 @@ class WatchlistScreen extends StatelessWidget {
               const SizedBox(height: AppSpacing.md),
             ],
           ),
+        );
+      },
+    );
+  }
+
+  void _showDeleteWatchlistDialog(BuildContext context, Watchlist selected) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          backgroundColor: AppColors.surface,
+          title: const Text(
+            AppStrings.dialogDeleteWatchlist,
+            style: AppTextStyles.titleLarge,
+          ),
+          content: const Text(
+            AppStrings.dialogDeleteWatchlistConfirm,
+            style: AppTextStyles.bodyMedium,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text(AppStrings.dialogCancel),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.error,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              onPressed: () {
+                context.read<WatchlistCubit>().deleteWatchlist(selected.id);
+                Navigator.pop(dialogContext);
+              },
+              child: const Text(
+                AppStrings.dialogDelete,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
         );
       },
     );

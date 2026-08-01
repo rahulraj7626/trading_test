@@ -46,6 +46,7 @@ class WatchlistCubit extends Cubit<WatchlistState> {
   void addWatchlist(String name) {
     if (state is WatchlistLoaded) {
       final current = state as WatchlistLoaded;
+      if (current.watchlists.length >= 10) return;
       final newList = List<Watchlist>.from(current.watchlists);
       final newWatchlist = Watchlist(id: uuid.v4(), name: name);
       newList.add(newWatchlist);
@@ -56,6 +57,7 @@ class WatchlistCubit extends Cubit<WatchlistState> {
   void deleteWatchlist(String id) {
     if (state is WatchlistLoaded) {
       final current = state as WatchlistLoaded;
+      if (current.watchlists.length <= 1) return;
       final newList = current.watchlists.where((w) => w.id != id).toList();
       final newIndex = current.selectedIndex >= newList.length
           ? (newList.length - 1 >= 0 ? newList.length - 1 : 0)

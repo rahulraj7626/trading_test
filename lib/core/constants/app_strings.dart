@@ -20,9 +20,17 @@ class AppStrings {
   static const String dialogNewWatchlist = 'New Watchlist';
   static const String dialogCancel = 'Cancel';
   static const String dialogAdd = 'Add';
+  static const String dialogDelete = 'Delete';
   static const String dialogAddStock = 'Add Stock';
   static const String dialogAllStocksInWatchlist =
       'All stocks are already in the watchlist.';
+  static const String dialogDeleteWatchlist = 'Delete Watchlist';
+  static const String dialogDeleteWatchlistConfirm =
+      'Are you sure you want to delete this watchlist?';
+  static const String errorMaxWatchlistsReached =
+      'Maximum limit of 10 watchlists reached.';
+  static const String errorMinWatchlistRequired =
+      'At least one watchlist is required.';
 
   // Portfolio Screen
   static const String titlePortfolio = 'Portfolio';
