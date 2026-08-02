@@ -98,19 +98,33 @@ class WatchlistCubit extends Cubit<WatchlistState> {
     }
   }
 
-  void reorderStocks(String watchlistId, int oldIndex, int newIndex) {
+  void reorderStocks(
+    String watchlistId,
+    int oldIndex,
+    int newIndex, {
+    List<String>? currentDisplaySymbols,
+  }) {
     if (state is WatchlistLoaded) {
       final current = state as WatchlistLoaded;
       final index = current.watchlists.indexWhere((w) => w.id == watchlistId);
       if (index != -1) {
         final watchlist = current.watchlists[index];
-        final newSymbols = List<String>.from(watchlist.symbols);
+        final displayList = List<String>.from(
+          currentDisplaySymbols ?? watchlist.symbols,
+        );
 
         if (oldIndex < newIndex) {
           newIndex -= 1;
         }
-        final symbol = newSymbols.removeAt(oldIndex);
-        newSymbols.insert(newIndex, symbol);
+        final symbol = displayList.removeAt(oldIndex);
+        displayList.insert(newIndex, symbol);
+
+        final newSymbols = List<String>.from(displayList);
+        for (final s in watchlist.symbols) {
+          if (!newSymbols.contains(s)) {
+            newSymbols.add(s);
+          }
+        }
 
         final updatedWatchlist = watchlist.copyWith(symbols: newSymbols);
         final newList = List<Watchlist>.from(current.watchlists)

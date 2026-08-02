@@ -196,7 +196,8 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
                 builder: (context, marketState) {
                   final sortedSymbols = List.of(filteredSymbols);
 
-                  if (marketState is MarketListLoaded) {
+                  if (marketState is MarketListLoaded &&
+                      marketState.sortOption != MarketSortOption.none) {
                     sortedSymbols.sort((a, b) {
                       final tickA = marketState.ticks[a];
                       final tickB = marketState.ticks[b];
@@ -217,6 +218,9 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
                           break;
                         case MarketSortOption.symbol:
                           result = a.compareTo(b);
+                          break;
+                        case MarketSortOption.none:
+                          result = 0;
                           break;
                       }
 
@@ -337,10 +341,14 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
                                     ),
                                 items: sortedSymbols,
                                 onReorder: (oldIndex, newIndex) {
+                                  context
+                                      .read<MarketListCubit>()
+                                      .updateSortOption(MarketSortOption.none);
                                   context.read<WatchlistCubit>().reorderStocks(
                                     selected.id,
                                     oldIndex,
                                     newIndex,
+                                    currentDisplaySymbols: sortedSymbols,
                                   );
                                 },
                                 dismissibleBuilder:
@@ -366,6 +374,22 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
                                                 selected.id,
                                                 symbol,
                                               );
+                                          ScaffoldMessenger.of(context)
+                                            ..hideCurrentSnackBar()
+                                            ..showSnackBar(
+                                              SnackBar(
+                                                content: Text(
+                                                  '${AppStrings.removedFromWatchlist} ${selected.name}',
+                                                  style: const TextStyle(
+                                                    color: Colors.white,
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                                ),
+                                                backgroundColor:
+                                                    const Color(0xFF1565C0), // Blue for removal
+                                                duration: const Duration(seconds: 2),
+                                              ),
+                                            );
                                         },
                                         child: child,
                                       );
@@ -415,6 +439,22 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
                         selected.id,
                         symbol,
                       );
+                      ScaffoldMessenger.of(context)
+                        ..hideCurrentSnackBar()
+                        ..showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              '${AppStrings.addedToWatchlist} ${selected.name}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            backgroundColor:
+                                const Color(0xFF2E7D32), // Green for addition
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
                     }
                   }
                 },

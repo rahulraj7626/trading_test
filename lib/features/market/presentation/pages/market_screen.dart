@@ -35,7 +35,11 @@ class _MarketScreenState extends State<MarketScreen> {
     getIt<MarketRepository>().startFeed();
 
     return BlocProvider(
-      create: (_) => getIt<MarketListCubit>(),
+      create: (_) {
+        final cubit = getIt<MarketListCubit>();
+        cubit.updateSortOption(MarketSortOption.symbol);
+        return cubit;
+      },
       child: Scaffold(
         appBar: AppBar(title: const Text(AppStrings.titleLiveMarket)),
         body: BlocBuilder<MarketListCubit, MarketListState>(
@@ -73,6 +77,7 @@ class _MarketScreenState extends State<MarketScreen> {
                     result = volA.compareTo(volB);
                     break;
                   case MarketSortOption.symbol:
+                  case MarketSortOption.none:
                     result = a.compareTo(b);
                     break;
                 }

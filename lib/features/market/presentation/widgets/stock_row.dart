@@ -137,14 +137,24 @@ class StockRow extends StatelessWidget {
                               context.read<WatchlistCubit>().toggleFavorite(
                                 tick.symbol,
                               );
-                              final text = isFavorite
+                              final isRemoving = isFavorite;
+                              final text = isRemoving
                                   ? '${AppStrings.removedFromWatchlist} $watchlistName'
                                   : '${AppStrings.addedToWatchlist} $watchlistName';
                               ScaffoldMessenger.of(context)
                                 ..hideCurrentSnackBar()
                                 ..showSnackBar(
                                   SnackBar(
-                                    content: Text(text),
+                                    content: Text(
+                                      text,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    backgroundColor: isRemoving
+                                        ? const Color(0xFF1565C0) // Blue for remove
+                                        : const Color(0xFF2E7D32), // Green for add
                                     duration: const Duration(seconds: 2),
                                   ),
                                 );

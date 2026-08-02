@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 import '../../domain/entities/stock_tick.dart';
 
-enum MarketSortOption { symbol, percentage, volume }
+enum MarketSortOption { none, symbol, percentage, volume }
 
 abstract class MarketListState extends Equatable {
   const MarketListState();
@@ -20,7 +20,7 @@ class MarketListLoaded extends MarketListState {
 
   const MarketListLoaded({
     required this.ticks,
-    this.sortOption = MarketSortOption.symbol,
+    this.sortOption = MarketSortOption.none,
     this.isAscending = true,
     this.searchQuery = '',
   });
