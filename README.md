@@ -121,26 +121,6 @@ dart run build_runner build --delete-conflicting-outputs
 # Run on default connected device
 flutter run
 
-# Run on macOS desktop app target
-flutter run -d macos
-
-# Run on Chrome web target
-flutter run -d chrome
 ```
 
----
 
-## 🧪 Code Quality & Verification
-
-Run static code analysis and tests before submitting pull requests:
-
-```bash
-# Format code according to Flutter guidelines
-flutter format .
-
-# Check for static analysis warnings or errors
-flutter analyze
-
-# Execute test suite
-flutter test
-```
