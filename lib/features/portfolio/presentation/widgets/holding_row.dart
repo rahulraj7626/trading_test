@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../../../core/config/app_config.dart';
 import '../../../../core/config/theme/app_colors.dart';
 import '../../../../core/config/theme/app_spacing.dart';
@@ -106,14 +107,14 @@ class HoldingRow extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text(
-                        Formatters.formatChange(pnl, 0.0).split(' ').first,
+                        Formatters.formatSignedPrice(pnl),
                         style: AppTextStyles.bodyLarge.copyWith(
                           color: isPositive ? AppColors.profit : AppColors.loss,
                         ),
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        '${isPositive ? '+' : ''}${pnlPercent.toStringAsFixed(2)}%',
+                        Formatters.formatSignedPercent(pnlPercent),
                         style: AppTextStyles.labelMedium.copyWith(
                           color: isPositive ? AppColors.profit : AppColors.loss,
                         ),

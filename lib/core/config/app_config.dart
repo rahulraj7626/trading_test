@@ -2,7 +2,7 @@ class AppConfig {
   static const String appName = 'Trading App';
 
   // Market Mock Feed Config
-  static const int tickIntervalMs = 500; // Debug setting for tick rate
+  static const int tickIntervalMs = 800; // Debug setting for tick rate
 
   static const List<String> availableStocks = [
     'RELIANCE',

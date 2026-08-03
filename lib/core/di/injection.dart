@@ -69,8 +69,10 @@ Future<void> initInjection() async {
 
   // Portfolio
   getIt.registerLazySingleton(() => GetHoldingsUseCase(getIt()));
-  getIt.registerFactory(() => HoldingsCubit(getHoldingsUseCase: getIt()));
-  getIt.registerFactory(
+  getIt.registerLazySingleton(
+    () => HoldingsCubit(getHoldingsUseCase: getIt()),
+  );
+  getIt.registerLazySingleton(
     () => PortfolioSummaryCubit(
       marketRepository: getIt(),
       holdingsCubit: getIt(),

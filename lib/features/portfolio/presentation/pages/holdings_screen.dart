@@ -58,7 +58,7 @@ class HoldingsScreen extends StatelessWidget {
                               Text(
                                 Formatters.formatPrice(
                                   state.currentValue,
-                                ).replaceAll('₹', ''),
+                                ),
                                 style: AppTextStyles.displayLarge,
                               ),
                             ],
@@ -82,7 +82,7 @@ class HoldingsScreen extends StatelessWidget {
                               Text(
                                 Formatters.formatPrice(
                                   state.totalInvested,
-                                ).replaceAll('₹', ''),
+                                ),
                                 style: AppTextStyles.titleMedium,
                               ),
                             ],
