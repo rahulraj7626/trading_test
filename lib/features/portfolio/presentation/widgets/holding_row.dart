@@ -1,20 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../../../core/config/app_config.dart';
 import '../../../../core/config/theme/app_colors.dart';
 import '../../../../core/config/theme/app_spacing.dart';
 import '../../../../core/config/theme/app_text_styles.dart';
-import '../../../../core/constants/app_strings.dart';
+import '../../../../core/presentation/widgets/company_avatar.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../market/presentation/bloc/live_price_cubit.dart';
 import '../../../market/presentation/bloc/live_price_state.dart';
+import '../../../watchlist/presentation/bloc/watchlist_cubit.dart';
+import '../../../watchlist/presentation/bloc/watchlist_state.dart';
 import '../../domain/entities/holding.dart';
 
 class HoldingRow extends StatelessWidget {
   final Holding holding;
   final VoidCallback? onTap;
+  final bool showFavoriteStar;
 
-  const HoldingRow({super.key, required this.holding, this.onTap});
+  const HoldingRow({
+    super.key,
+    required this.holding,
+    this.onTap,
+    this.showFavoriteStar = true,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +43,7 @@ class HoldingRow extends StatelessWidget {
         final invested = holding.quantity * holding.averageCost;
         final currentValue = holding.quantity * currentPrice;
         final pnl = currentValue - invested;
-        final pnlPercent = (pnl / invested) * 100;
+        final pnlPercent = invested > 0 ? (pnl / invested) * 100 : 0.0;
         final isPositive = pnl >= 0;
         final companyName =
             AppConfig.companyNames[holding.symbol] ?? holding.symbol;
@@ -50,19 +59,27 @@ class HoldingRow extends StatelessWidget {
               children: [
                 Expanded(
                   flex: 4,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  child: Row(
                     children: [
-                      Text(
-                        companyName,
-                        style: AppTextStyles.bodyLarge,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        '${AppStrings.labelQty} ${Formatters.quantityFormat.format(holding.quantity)} • ${AppStrings.labelAvg} ${Formatters.formatPrice(holding.averageCost)}',
-                        style: AppTextStyles.labelMedium,
+                      CompanyAvatar(symbol: holding.symbol),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              companyName,
+                              style: AppTextStyles.bodyLarge,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              '${holding.symbol} • Qty: ${holding.quantity}',
+                              style: AppTextStyles.labelMedium,
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
@@ -78,7 +95,7 @@ class HoldingRow extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        '${AppStrings.labelLtp} ${Formatters.formatPrice(currentPrice)}',
+                        'Avg: ${Formatters.formatPrice(holding.averageCost)}',
                         style: AppTextStyles.labelMedium,
                       ),
                     ],
@@ -90,17 +107,14 @@ class HoldingRow extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text(
-                        Formatters.formatChange(
-                          pnl,
-                          0.0,
-                        ).split(' ').first, // Only showing +5.60
+                        Formatters.formatSignedPrice(pnl),
                         style: AppTextStyles.bodyLarge.copyWith(
                           color: isPositive ? AppColors.profit : AppColors.loss,
                         ),
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        '${isPositive ? '+' : ''}${pnlPercent.toStringAsFixed(2)}%',
+                        Formatters.formatSignedPercent(pnlPercent),
                         style: AppTextStyles.labelMedium.copyWith(
                           color: isPositive ? AppColors.profit : AppColors.loss,
                         ),
@@ -108,6 +122,39 @@ class HoldingRow extends StatelessWidget {
                     ],
                   ),
                 ),
+                if (showFavoriteStar)
+                  BlocBuilder<WatchlistCubit, WatchlistState>(
+                    builder: (context, watchlistState) {
+                      bool isFavorite = false;
+                      if (watchlistState is WatchlistLoaded &&
+                          watchlistState.selectedWatchlist != null) {
+                        isFavorite = watchlistState.selectedWatchlist!.symbols
+                            .contains(holding.symbol);
+                      }
+                      return InkWell(
+                        borderRadius: BorderRadius.circular(20),
+                        onTap: () {
+                          context.read<WatchlistCubit>().toggleFavorite(
+                            holding.symbol,
+                          );
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 8.0),
+                          child: Icon(
+                            isFavorite
+                                ? Icons.star_rounded
+                                : Icons.star_border_rounded,
+                            color: isFavorite
+                                ? const Color(0xFFFFC107)
+                                : AppColors.textSecondary.withValues(
+                                    alpha: 0.35,
+                                  ),
+                            size: 20,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
               ],
             ),
           ),

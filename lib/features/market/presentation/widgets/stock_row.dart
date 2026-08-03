@@ -4,16 +4,28 @@ import '../../../../core/config/app_config.dart';
 import '../../../../core/config/theme/app_colors.dart';
 import '../../../../core/config/theme/app_spacing.dart';
 import '../../../../core/config/theme/app_text_styles.dart';
+import '../../../../core/constants/app_strings.dart';
 import '../../../../core/presentation/widgets/company_avatar.dart';
 import '../../../../core/utils/formatters.dart';
+import '../../../watchlist/presentation/bloc/watchlist_cubit.dart';
+import '../../../watchlist/presentation/bloc/watchlist_state.dart';
+import '../../../watchlist/presentation/widgets/watchlist_selector_sheet.dart';
 import '../bloc/live_price_cubit.dart';
 import '../bloc/live_price_state.dart';
 
 class StockRow extends StatelessWidget {
   final String symbol;
   final VoidCallback? onTap;
+  final bool showVolume;
+  final bool showFavoriteStar;
 
-  const StockRow({super.key, required this.symbol, this.onTap});
+  const StockRow({
+    super.key,
+    required this.symbol,
+    this.onTap,
+    this.showVolume = true,
+    this.showFavoriteStar = true,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -68,14 +80,15 @@ class StockRow extends StatelessWidget {
                       ],
                     ),
                   ),
-                  Expanded(
-                    flex: 2,
-                    child: Text(
-                      volume.toStringAsFixed(2),
-                      style: AppTextStyles.bodyLarge,
-                      textAlign: TextAlign.right,
+                  if (showVolume)
+                    Expanded(
+                      flex: 2,
+                      child: Text(
+                        volume.toStringAsFixed(2),
+                        style: AppTextStyles.bodyLarge,
+                        textAlign: TextAlign.right,
+                      ),
                     ),
-                  ),
                   Expanded(
                     flex: 3,
                     child: Column(
@@ -104,6 +117,69 @@ class StockRow extends StatelessWidget {
                       ],
                     ),
                   ),
+                  if (showFavoriteStar)
+                    BlocBuilder<WatchlistCubit, WatchlistState>(
+                      builder: (context, watchlistState) {
+                        bool isFavorite = false;
+                        String? watchlistName;
+                        if (watchlistState is WatchlistLoaded &&
+                            watchlistState.selectedWatchlist != null) {
+                          watchlistName =
+                              watchlistState.selectedWatchlist!.name;
+                          isFavorite = watchlistState.selectedWatchlist!.symbols
+                              .contains(tick.symbol);
+                        }
+                        return InkWell(
+                          borderRadius: BorderRadius.circular(20),
+                          onTap: () {
+                            if (watchlistState is WatchlistLoaded &&
+                                watchlistState.selectedWatchlist != null) {
+                              context.read<WatchlistCubit>().toggleFavorite(
+                                tick.symbol,
+                              );
+                              final isRemoving = isFavorite;
+                              final text = isRemoving
+                                  ? '${AppStrings.removedFromWatchlist} $watchlistName'
+                                  : '${AppStrings.addedToWatchlist} $watchlistName';
+                              ScaffoldMessenger.of(context)
+                                ..hideCurrentSnackBar()
+                                ..showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      text,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    backgroundColor: isRemoving
+                                        ? const Color(0xFF1565C0) // Blue for remove
+                                        : const Color(0xFF2E7D32), // Green for add
+                                    duration: const Duration(seconds: 2),
+                                  ),
+                                );
+                            }
+                          },
+                          onLongPress: () {
+                            WatchlistSelectorSheet.show(context, tick.symbol);
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.only(left: 8.0),
+                            child: Icon(
+                              isFavorite
+                                  ? Icons.star_rounded
+                                  : Icons.star_border_rounded,
+                              color: isFavorite
+                                  ? const Color(0xFFFFC107)
+                                  : AppColors.textSecondary.withValues(
+                                      alpha: 0.35,
+                                    ),
+                              size: 20,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                 ],
               ),
             ),

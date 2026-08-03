@@ -1,7 +1,7 @@
-import 'package:fpdart/fpdart.dart';
 import 'dart:async';
 import 'dart:math';
-import 'package:drift/drift.dart';
+
+import 'package:fpdart/fpdart.dart';
 
 import '../../../../core/config/app_config.dart';
 import '../../../../core/database/database.dart';

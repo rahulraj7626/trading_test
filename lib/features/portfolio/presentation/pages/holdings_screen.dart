@@ -6,11 +6,12 @@ import '../../../../core/config/theme/app_spacing.dart';
 import '../../../../core/config/theme/app_text_styles.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/di/injection.dart';
-import '../../../../core/presentation/widgets/list_header_row.dart';
+import '../../../../core/presentation/widgets/common_stock_list_view.dart';
 import '../../../../core/presentation/widgets/metric_text.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../market/domain/repositories/market_repository.dart';
 import '../../../market/presentation/bloc/live_price_cubit.dart';
+import '../../domain/entities/holding.dart';
 import '../bloc/holdings_cubit.dart';
 import '../bloc/holdings_state.dart';
 import '../bloc/portfolio_summary_cubit.dart';
@@ -30,14 +31,6 @@ class HoldingsScreen extends StatelessWidget {
             builder: (context, state) {
               final isPositive = state.totalPnL >= 0;
               final pnlColor = isPositive ? AppColors.profit : AppColors.loss;
-
-              // Mock 1D change data
-              final mock1dChange = state.totalPnL * 0.1;
-              final mock1dPercent = state.totalPnLPercent * 0.1;
-              final is1dPositive = mock1dChange >= 0;
-              final oneDColor = is1dPositive
-                  ? AppColors.profit
-                  : AppColors.loss;
 
               return Padding(
                 padding: const EdgeInsets.all(AppSpacing.md),
@@ -65,7 +58,7 @@ class HoldingsScreen extends StatelessWidget {
                               Text(
                                 Formatters.formatPrice(
                                   state.currentValue,
-                                ).replaceAll('₹', ''),
+                                ),
                                 style: AppTextStyles.displayLarge,
                               ),
                             ],
@@ -89,7 +82,7 @@ class HoldingsScreen extends StatelessWidget {
                               Text(
                                 Formatters.formatPrice(
                                   state.totalInvested,
-                                ).replaceAll('₹', ''),
+                                ),
                                 style: AppTextStyles.titleMedium,
                               ),
                             ],
@@ -107,15 +100,6 @@ class HoldingsScreen extends StatelessWidget {
                         ),
                         valueColor: pnlColor,
                       ),
-                      const SizedBox(height: AppSpacing.sm),
-                      MetricText(
-                        label: AppStrings.portfolio1DChange,
-                        value: Formatters.formatChange(
-                          mock1dChange,
-                          mock1dPercent,
-                        ),
-                        valueColor: oneDColor,
-                      ),
                     ],
                   ),
                 ),
@@ -123,113 +107,7 @@ class HoldingsScreen extends StatelessWidget {
             },
           ),
 
-          // Toggles Row
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-            child: Row(
-              children: [
-                BlocBuilder<HoldingsCubit, HoldingsState>(
-                  builder: (context, state) {
-                    if (state is HoldingsLoaded) {
-                      String sortLabel = 'P&L';
-                      if (state.sortOption == HoldingsSortOption.value)
-                        sortLabel = 'Value';
-                      if (state.sortOption == HoldingsSortOption.symbol)
-                        sortLabel = 'Name';
-
-                      return InkWell(
-                        onTap: () {
-                          // Cycle through sort options
-                          var nextSort = HoldingsSortOption.pnl;
-                          if (state.sortOption == HoldingsSortOption.pnl)
-                            nextSort = HoldingsSortOption.value;
-                          else if (state.sortOption == HoldingsSortOption.value)
-                            nextSort = HoldingsSortOption.symbol;
-
-                          context.read<HoldingsCubit>().updateSortOption(
-                            nextSort,
-                          );
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            border: Border.all(color: AppColors.divider),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Row(
-                            children: [
-                              Text(
-                                '${AppStrings.sortPrefix} $sortLabel',
-                                style: AppTextStyles.labelMedium,
-                              ),
-                              const SizedBox(width: 4),
-                              const Icon(
-                                Icons.arrow_downward,
-                                size: 14,
-                                color: AppColors.textSecondary,
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    }
-                    return const SizedBox.shrink();
-                  },
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: AppColors.divider),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Row(
-                    children: [
-                      const Text(
-                        AppStrings.openOrders,
-                        style: AppTextStyles.labelMedium,
-                      ),
-                      const SizedBox(width: 4),
-                      Switch(
-                        value: false,
-                        onChanged: (val) {
-                          // Dummy switch for now
-                        },
-                        activeColor: Colors.white,
-                        activeTrackColor: AppColors.primary,
-                        inactiveThumbColor: AppColors.textSecondary,
-                        inactiveTrackColor: AppColors.background,
-                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: AppSpacing.md),
-          const Divider(height: 1),
-          const Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: AppSpacing.md,
-              vertical: AppSpacing.sm,
-            ),
-            child: ListHeaderRow(
-              col1: AppStrings.colNameQty,
-              col2: AppStrings.colValLtp,
-              col3: AppStrings.colPnl1d,
-            ),
-          ),
-          const Divider(height: 1),
-
-          // Holdings List
+          // Holdings List using CommonStockListView
           Expanded(
             child: BlocBuilder<HoldingsCubit, HoldingsState>(
               builder: (context, state) {
@@ -260,6 +138,7 @@ class HoldingsScreen extends StatelessWidget {
                         final priceA = tickA?.price ?? a.averageCost;
                         final priceB = tickB?.price ?? b.averageCost;
 
+                        int result = 0;
                         switch (state.sortOption) {
                           case HoldingsSortOption.pnl:
                             final pnlA =
@@ -268,22 +147,35 @@ class HoldingsScreen extends StatelessWidget {
                             final pnlB =
                                 (b.quantity * priceB) -
                                 (b.quantity * b.averageCost);
-                            return pnlB.compareTo(pnlA);
+                            result = pnlA.compareTo(pnlB);
+                            break;
                           case HoldingsSortOption.value:
                             final valA = a.quantity * priceA;
                             final valB = b.quantity * priceB;
-                            return valB.compareTo(valA);
+                            result = valA.compareTo(valB);
+                            break;
                           case HoldingsSortOption.symbol:
-                            return a.symbol.compareTo(b.symbol);
+                            result = a.symbol.compareTo(b.symbol);
+                            break;
                         }
+                        return state.isAscending ? result : -result;
                       });
 
-                      return ListView.separated(
-                        itemCount: sortedHoldings.length,
-                        separatorBuilder: (context, index) =>
-                            const Divider(height: 1),
-                        itemBuilder: (context, index) {
-                          final holding = sortedHoldings[index];
+                      return CommonStockListView<Holding>(
+                        col1: AppStrings.colCompanyName,
+                        col2: AppStrings.sortLabelValue,
+                        col3: AppStrings.colPnl1d,
+                        onCol1Tap: () => context
+                            .read<HoldingsCubit>()
+                            .updateSortOption(HoldingsSortOption.symbol),
+                        onCol2Tap: () => context
+                            .read<HoldingsCubit>()
+                            .updateSortOption(HoldingsSortOption.value),
+                        onCol3Tap: () => context
+                            .read<HoldingsCubit>()
+                            .updateSortOption(HoldingsSortOption.pnl),
+                        items: sortedHoldings,
+                        itemBuilder: (context, holding, index) {
                           return BlocProvider(
                             key: ValueKey(holding.symbol),
                             create: (_) => LivePriceCubit(

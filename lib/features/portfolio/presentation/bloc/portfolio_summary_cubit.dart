@@ -1,11 +1,63 @@
 import 'dart:async';
+
 import 'package:equatable/equatable.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../../market/domain/entities/stock_tick.dart';
 import '../../../market/domain/repositories/market_repository.dart';
 import '../../domain/entities/holding.dart';
 import 'holdings_cubit.dart';
 import 'holdings_state.dart';
+
+class _PortfolioCalculationInput {
+  final List<Holding> holdings;
+  final Map<String, StockTick> ticks;
+
+  _PortfolioCalculationInput(this.holdings, this.ticks);
+}
+
+class _PortfolioCalculationResult {
+  final double totalInvested;
+  final double currentValue;
+  final double totalPnL;
+  final double totalPnLPercent;
+
+  _PortfolioCalculationResult({
+    required this.totalInvested,
+    required this.currentValue,
+    required this.totalPnL,
+    required this.totalPnLPercent,
+  });
+}
+
+_PortfolioCalculationResult _calculatePortfolioSummaryInIsolate(
+  _PortfolioCalculationInput input,
+) {
+  double invested = 0;
+  double currentVal = 0;
+
+  for (final holding in input.holdings) {
+    invested += holding.quantity * holding.averageCost;
+    final tick = input.ticks[holding.symbol];
+    if (tick != null) {
+      currentVal += holding.quantity * tick.price;
+    } else {
+      // Fallback if no tick available yet
+      currentVal += holding.quantity * holding.averageCost;
+    }
+  }
+
+  final pnl = currentVal - invested;
+  final pnlPercent = invested > 0 ? (pnl / invested) * 100 : 0.0;
+
+  return _PortfolioCalculationResult(
+    totalInvested: invested,
+    currentValue: currentVal,
+    totalPnL: pnl,
+    totalPnLPercent: pnlPercent,
+  );
+}
 
 class PortfolioSummaryState extends Equatable {
   final double totalInvested;
@@ -51,7 +103,7 @@ class PortfolioSummaryCubit extends Cubit<PortfolioSummaryState> {
            currentValue: 0,
            totalPnL: 0,
            totalPnLPercent: 0,
-           ticks: const {},
+           ticks: {},
          ),
        ) {
     _init();
@@ -73,6 +125,7 @@ class PortfolioSummaryCubit extends Cubit<PortfolioSummaryState> {
     // Handle initial state if already loaded
     if (holdingsCubit.state is HoldingsLoaded) {
       _currentHoldings = (holdingsCubit.state as HoldingsLoaded).holdings;
+      _calculateSummary();
     }
 
     // Initial ticks sync
@@ -84,32 +137,22 @@ class PortfolioSummaryCubit extends Cubit<PortfolioSummaryState> {
     });
   }
 
-  void _calculateSummary() {
+  Future<void> _calculateSummary() async {
     if (isClosed) return;
 
-    double invested = 0;
-    double currentVal = 0;
+    final result = await compute(
+      _calculatePortfolioSummaryInIsolate,
+      _PortfolioCalculationInput(_currentHoldings, _currentTicks),
+    );
 
-    for (final holding in _currentHoldings) {
-      invested += holding.quantity * holding.averageCost;
-      final tick = _currentTicks[holding.symbol];
-      if (tick != null) {
-        currentVal += holding.quantity * tick.price;
-      } else {
-        // Fallback if no tick available yet
-        currentVal += holding.quantity * holding.averageCost;
-      }
-    }
-
-    final pnl = currentVal - invested;
-    final pnlPercent = invested > 0 ? (pnl / invested) * 100 : 0.0;
+    if (isClosed) return;
 
     emit(
       PortfolioSummaryState(
-        totalInvested: invested,
-        currentValue: currentVal,
-        totalPnL: pnl,
-        totalPnLPercent: pnlPercent,
+        totalInvested: result.totalInvested,
+        currentValue: result.currentValue,
+        totalPnL: result.totalPnL,
+        totalPnLPercent: result.totalPnLPercent,
         ticks: _currentTicks,
       ),
     );

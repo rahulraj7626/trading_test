@@ -42,14 +42,16 @@ class TradingApp extends StatelessWidget {
             unselectedLabelStyle: TextStyle(fontSize: 12),
           ),
           snackBarTheme: SnackBarThemeData(
+            backgroundColor: AppColors.surface,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
+              side: const BorderSide(color: AppColors.divider, width: 1),
             ),
             elevation: 4,
             contentTextStyle: const TextStyle(
               fontSize: 14,
-              color: Colors.white,
+              color: AppColors.textPrimary,
               fontWeight: FontWeight.w500,
             ),
           ),

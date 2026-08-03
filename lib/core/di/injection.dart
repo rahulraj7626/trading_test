@@ -1,33 +1,26 @@
 import 'package:get_it/get_it.dart';
-import '../database/database.dart';
 
+import '../../features/market/data/repositories/market_repository_impl.dart';
 // Market
-import '../../features/market/domain/repositories/market_repository.dart';
-import '../../features/market/data/repositories/market_repository_impl.dart';
-
-// Watchlist
-import '../../features/watchlist/data/datasources/watchlist_local_data_source.dart';
-import '../../features/watchlist/domain/repositories/watchlist_repository.dart';
-import '../../features/watchlist/data/repositories/watchlist_repository_impl.dart';
-import '../../features/watchlist/domain/usecases/watchlist_usecases.dart';
-import '../../features/watchlist/presentation/bloc/watchlist_cubit.dart';
-
-// Trading
-import '../../features/market/data/repositories/market_repository_impl.dart';
 import '../../features/market/domain/repositories/market_repository.dart';
 import '../../features/market/presentation/bloc/live_price_cubit.dart';
 import '../../features/market/presentation/bloc/market_list_cubit.dart';
-import '../../features/market/presentation/bloc/market_list_cubit.dart';
-import '../../features/trading/data/datasources/trading_local_data_source.dart';
-import '../../features/trading/domain/repositories/trading_repository.dart';
-import '../../features/trading/data/repositories/trading_repository_impl.dart';
-import '../../features/trading/domain/usecases/trading_usecases.dart';
-import '../../features/trading/presentation/bloc/trading_cubit.dart';
-
 // Portfolio
 import '../../features/portfolio/domain/usecases/portfolio_usecases.dart';
 import '../../features/portfolio/presentation/bloc/holdings_cubit.dart';
 import '../../features/portfolio/presentation/bloc/portfolio_summary_cubit.dart';
+import '../../features/trading/data/datasources/trading_local_data_source.dart';
+import '../../features/trading/data/repositories/trading_repository_impl.dart';
+import '../../features/trading/domain/repositories/trading_repository.dart';
+import '../../features/trading/domain/usecases/trading_usecases.dart';
+import '../../features/trading/presentation/bloc/trading_cubit.dart';
+// Watchlist
+import '../../features/watchlist/data/datasources/watchlist_local_data_source.dart';
+import '../../features/watchlist/data/repositories/watchlist_repository_impl.dart';
+import '../../features/watchlist/domain/repositories/watchlist_repository.dart';
+import '../../features/watchlist/domain/usecases/watchlist_usecases.dart';
+import '../../features/watchlist/presentation/bloc/watchlist_cubit.dart';
+import '../database/database.dart';
 
 final getIt = GetIt.instance;
 
@@ -76,8 +69,10 @@ Future<void> initInjection() async {
 
   // Portfolio
   getIt.registerLazySingleton(() => GetHoldingsUseCase(getIt()));
-  getIt.registerFactory(() => HoldingsCubit(getHoldingsUseCase: getIt()));
-  getIt.registerFactory(
+  getIt.registerLazySingleton(
+    () => HoldingsCubit(getHoldingsUseCase: getIt()),
+  );
+  getIt.registerLazySingleton(
     () => PortfolioSummaryCubit(
       marketRepository: getIt(),
       holdingsCubit: getIt(),

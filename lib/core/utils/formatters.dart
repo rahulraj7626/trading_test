@@ -20,7 +20,24 @@ class Formatters {
   }
 
   static String formatChange(double change, double changePercent) {
-    final sign = change >= 0 ? '+' : '';
-    return '$sign${priceFormat.format(change)} ($sign${percentFormat.format(changePercent)}%)';
+    final formattedPrice = formatSignedPrice(change);
+    final formattedPercent = formatSignedPercent(changePercent);
+    return '$formattedPrice ($formattedPercent)';
+  }
+
+  static String formatSignedPrice(double amount) {
+    if (amount.abs() < 0.005) {
+      return priceFormat.format(0.0);
+    }
+    final sign = amount > 0 ? '+' : '';
+    return '$sign${priceFormat.format(amount)}';
+  }
+
+  static String formatSignedPercent(double percent) {
+    if (percent.abs() < 0.005) {
+      return '${percentFormat.format(0.0)}%';
+    }
+    final sign = percent > 0 ? '+' : '';
+    return '$sign${percentFormat.format(percent)}%';
   }
 }

@@ -18,10 +18,18 @@ class MarketListCubit extends Cubit<MarketListState> {
     });
   }
 
+  void updateSearchQuery(String query) {
+    if (state is MarketListLoaded) {
+      emit((state as MarketListLoaded).copyWith(searchQuery: query));
+    }
+  }
+
   void updateSortOption(MarketSortOption option) {
     if (state is MarketListLoaded) {
       final currentState = state as MarketListLoaded;
-      if (currentState.sortOption == option) {
+      if (option == MarketSortOption.none) {
+        emit(currentState.copyWith(sortOption: MarketSortOption.none));
+      } else if (currentState.sortOption == option) {
         // Toggle ascending/descending
         emit(currentState.copyWith(isAscending: !currentState.isAscending));
       } else {

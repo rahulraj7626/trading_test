@@ -46,6 +46,7 @@ class WatchlistCubit extends Cubit<WatchlistState> {
   void addWatchlist(String name) {
     if (state is WatchlistLoaded) {
       final current = state as WatchlistLoaded;
+      if (current.watchlists.length >= 10) return;
       final newList = List<Watchlist>.from(current.watchlists);
       final newWatchlist = Watchlist(id: uuid.v4(), name: name);
       newList.add(newWatchlist);
@@ -56,6 +57,7 @@ class WatchlistCubit extends Cubit<WatchlistState> {
   void deleteWatchlist(String id) {
     if (state is WatchlistLoaded) {
       final current = state as WatchlistLoaded;
+      if (current.watchlists.length <= 1) return;
       final newList = current.watchlists.where((w) => w.id != id).toList();
       final newIndex = current.selectedIndex >= newList.length
           ? (newList.length - 1 >= 0 ? newList.length - 1 : 0)
@@ -96,24 +98,52 @@ class WatchlistCubit extends Cubit<WatchlistState> {
     }
   }
 
-  void reorderStocks(String watchlistId, int oldIndex, int newIndex) {
+  void reorderStocks(
+    String watchlistId,
+    int oldIndex,
+    int newIndex, {
+    List<String>? currentDisplaySymbols,
+  }) {
     if (state is WatchlistLoaded) {
       final current = state as WatchlistLoaded;
       final index = current.watchlists.indexWhere((w) => w.id == watchlistId);
       if (index != -1) {
         final watchlist = current.watchlists[index];
-        final newSymbols = List<String>.from(watchlist.symbols);
+        final displayList = List<String>.from(
+          currentDisplaySymbols ?? watchlist.symbols,
+        );
 
         if (oldIndex < newIndex) {
           newIndex -= 1;
         }
-        final symbol = newSymbols.removeAt(oldIndex);
-        newSymbols.insert(newIndex, symbol);
+        final symbol = displayList.removeAt(oldIndex);
+        displayList.insert(newIndex, symbol);
+
+        final newSymbols = List<String>.from(displayList);
+        for (final s in watchlist.symbols) {
+          if (!newSymbols.contains(s)) {
+            newSymbols.add(s);
+          }
+        }
 
         final updatedWatchlist = watchlist.copyWith(symbols: newSymbols);
         final newList = List<Watchlist>.from(current.watchlists)
           ..[index] = updatedWatchlist;
         _save(newList, current.selectedIndex);
+      }
+    }
+  }
+
+  void toggleFavorite(String symbol) {
+    if (state is WatchlistLoaded) {
+      final current = state as WatchlistLoaded;
+      final selected = current.selectedWatchlist;
+      if (selected != null) {
+        if (selected.symbols.contains(symbol)) {
+          removeStockFromWatchlist(selected.id, symbol);
+        } else {
+          addStockToWatchlist(selected.id, symbol);
+        }
       }
     }
   }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+
 import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_text_styles.dart';
-import '../../utils/formatters.dart';
 
 class MetricText extends StatelessWidget {
   final String label;

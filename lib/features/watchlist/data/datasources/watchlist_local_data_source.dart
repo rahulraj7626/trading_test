@@ -1,7 +1,7 @@
 import 'dart:convert';
+
 import '../../../../core/database/database.dart';
 import '../models/watchlist_model.dart';
-import 'package:drift/drift.dart';
 
 abstract class WatchlistLocalDataSource {
   Future<List<WatchlistModel>> getWatchlists();
