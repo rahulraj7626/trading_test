@@ -4,6 +4,14 @@ A modular, clean-architected Flutter trading application built with **BLoC/Cubit
 
 ---
 
+## 📱 Submission & Demo Media
+
+All submission assets including the **APK build**, **app screenshots**, and **screen recording demo** are available on Google Drive:
+
+- 🔗 **Google Drive Folder**: [Submission APK, Screenshots & Screen Recording](https://drive.google.com/drive/folders/1E7JrsjgxU9v4O4T2X8x33JoJ7zuwrclb?usp=drive_link)
+
+---
+
 ## 🌟 Key Features
 
 ### 📊 1. Market Feature (`lib/features/market/`)
@@ -98,7 +106,7 @@ lib/
 ### 1. Prerequisites
 - **Flutter SDK**: `>= 3.11.5`
 - **Dart SDK**: `>= 3.0.0`
-- Target environment: iOS Simulator / macOS / Android Emulator / Chrome
+- Target environment: iOS Simulator / Android Emulator
 
 ### 2. Setup & Installation
 ```bash
